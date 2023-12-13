@@ -14,6 +14,26 @@ https://dev.to/sanjayrv/a-beginners-guide-to-socket-programming-in-c-5an5
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <pthread.h>
+
+void *handle_connection(void *sock_desc) {
+	// Get the socket descriptor
+	int clientSocket = *(int*)sock_desc;
+
+	// Send connection confirmation to the client
+	char message[] = "Ayyy, this is your server speaking";
+	send(clientSocket, message, sizeof(message), 0);
+
+	// After that we listen in a never ending loop and echo whatever the client sends
+	while (1) {
+		char buffer[1024];
+		recv(clientSocket, buffer, sizeof(buffer), 0);
+		printf("Client says: %s\n", buffer);
+		send(clientSocket, buffer, sizeof(buffer), 0);
+	}
+
+	return 0;
+}
 
 int main(void) {
   // Socket creation
@@ -34,26 +54,32 @@ int main(void) {
   printf("Server listening on port 12345 . . . . \n");
 
   // Accept incoming connections
-  int clientSocket = accept(serverSocket, NULL, NULL);
+  while (1) {
+	  int clientSocket = accept(serverSocket, NULL, NULL);
+	  pthread_t thread_id;
+	  pthread_create(&thread_id, NULL, handle_connection, (void*)&clientSocket);
+  }
 
   // Try to send a message
   // char message[] = "Hello from server";
   // send(clientSocket, message, strlen(message), 0);
 
   // Lets recieve messages from the client in a loop
-  while (1) {
-    char message[1024];
-    char buffer[1024];
-    printf("Enter message for client: ");
-    fgets(message, sizeof(message), stdin);
-    send(clientSocket, message, sizeof(message), 0);
-    recv(clientSocket, buffer, sizeof(buffer), 0);
-    printf("Client says: %s\n", buffer);
-  }
+  // while (1) {
+  //   char message[1024];
+  //   char buffer[1024];
+  //   printf("Enter message for client: ");
+  //   fgets(message, sizeof(message), stdin);
+  //   send(clientSocket, message, sizeof(message), 0);
+  //   recv(clientSocket, buffer, sizeof(buffer), 0);
+  //   printf("Client says: %s\n", buffer);
+  // }
+
+  // The above code, but with multithreading
 
   // Now we close sockets
   close(serverSocket);
-  close(clientSocket);
+  // close(clientSocket);
   
   return 0;
 }
