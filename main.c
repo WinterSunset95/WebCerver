@@ -28,7 +28,7 @@ void *handle_connection(void *sock_desc) {
 	while (1) {
 		char buffer[1024];
 		recv(clientSocket, buffer, sizeof(buffer), 0);
-		printf("Client says: %s\n", buffer);
+		printf("Client %d says: %s", clientSocket, buffer);
 		send(clientSocket, buffer, sizeof(buffer), 0);
 	}
 
